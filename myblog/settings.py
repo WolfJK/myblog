@@ -26,7 +26,7 @@ SECRET_KEY = 'sy3h%yw*4%+oo46u0l%e2wd7f63#town+$!m=ci#r7ru)^9m8-'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+LOGGING_LEVEL = 'DEBUG'
 
 # Application definition
 
@@ -55,7 +55,7 @@ ROOT_URLCONF = 'myblog.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join('./templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'user/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -123,3 +123,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# STATICFILES_DIRS = [os.path.join(STATIC_ROOT, 'images'), os.path.join(STATIC_ROOT, 'css'), os.path.join(STATIC_ROOT, r'js')]

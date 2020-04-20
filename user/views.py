@@ -23,6 +23,7 @@ class IndexView(View):
 
 
 def page_def(obj, page=1):
+    '''分页'''
     logger.info('page_def()')
     PAGE_NUM = 3  # 每页显示 5 条数据
     paginator = Paginator(obj, PAGE_NUM)
@@ -56,6 +57,7 @@ def page_def(obj, page=1):
 
 # /index
 def index(request):
+    '''首页'''
     logger.info('/index()--><--')
     print('--><--', settings.STATICFILES_DIRS, settings.BASE_DIR)
     result = models.Article.objects.all().order_by('-create_at')
@@ -66,7 +68,7 @@ def index(request):
 
 # /searchArticles
 def searchArticles(request, page=1):
-    '''根据标题查询'''
+    '''文章搜索'''
     logger.info('/searchArticles()')
     page = int(request.POST.get('page'))
     keywords = request.POST.get('keyboard')
@@ -89,6 +91,7 @@ def searchArticles(request, page=1):
 
 # /searchRecommend
 def searchRecommend(request):
+    '''站长推荐'''
     logger.info('/searchRecommend()')
     queryset = models.Article.objects.all().order_by('-reply_count')[:5]
     temp = ''
@@ -100,7 +103,7 @@ def searchRecommend(request):
 
 # /article_detail
 def artileDetail(request, article_id):
-    '''article_id: 文章 id '''
+    '''article_id: 文章 id 文章详情'''
     qs = models.Article.objects.get(id=int(article_id))
     content_info = dict(publish_date=qs.create_at, author=qs.user_id, title=qs.article_title, content=qs.article_content,
                         like_count=qs.like_count, reply_count=qs.reply_count, article_id=qs.id)  # 文章的详情
@@ -123,6 +126,7 @@ def artileDetail(request, article_id):
 
 # /addComment
 def addComment(request):
+    '''评论'''
     article_id = request.POST.get('article_id')
     # 查询  comment表中的外键
     c1 = models.Comment(create_at=lambda :datetime.datetime.fromtimestamp(time.time()),

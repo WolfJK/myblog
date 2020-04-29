@@ -5,12 +5,22 @@ from user import models
 from django.core.paginator import Paginator
 from django.conf import settings
 import time, datetime
+from django.contrib.auth import *
 # Create your views here.
+import os
 import logging
 
-logging.basicConfig(format='%(asctime)s %[(filename)]s[line:%(lineno)d] %(levelname)s %(message)s',
-                datefmt='%a, %d %b %Y %H:%M:%S')
+
+# file = open('./remain/%s' % 'log001.txt', encoding='utf-8', mode='a')
 logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+            level=logging.DEBUG,
+            format='%(asctime)s [%(filename)s] [line:%(lineno)d] %(levelname)s \n %(message)s',
+            datefmt='[%d/%b/%Y %H:%M:%S]',
+            # stream=file
+            # filename='./remain/%s' % 'log001.txt', filemode='a'
+        )
 
 
 class IndexView(View):
@@ -73,15 +83,15 @@ def searchArticles(request, page=1):
     page = int(request.POST.get('page'))
     keywords = request.POST.get('keyboard')
 
-    result = models.Article.objects.filter(article_title__contains=keywords).order_by('-create_at')
+    result = models.Article.objects.filter(title__contains=keywords).order_by('-create_at')
     print(keywords, len((result)), page)
 
     curr_data, page_data = page_def(result, page)
     data = ''
     for curr in curr_data:
         h = '''<li> <h3 id="a_title"><a href="/artileDetail/{article_id}">{article_title}</a></h3><p id="a_content">{article_content}</p><i></i></li>'''\
-            .format(article_title=curr.article_title,
-                    article_content=curr.article_content,
+            .format(article_title=curr.title,
+                    article_content=curr.content,
                     article_id=curr.id
                     )
         data = data + h
@@ -96,7 +106,7 @@ def searchRecommend(request):
     queryset = models.Article.objects.all().order_by('-reply_count')[:5]
     temp = ''
     for i in queryset:
-        temp += '<li><a href="/artileDetail/{article_id}">{title}</a></li>'.format(title=i.article_title, article_id=i.id)
+        temp += '<li><a href="/artileDetail/{article_id}">{title}</a></li>'.format(title=i.title, article_id=i.id)
     temp = '<ul>' + temp +'</ul>'
     return JsonResponse({'data': temp})
 
@@ -105,7 +115,7 @@ def searchRecommend(request):
 def artileDetail(request, article_id):
     '''article_id: 文章 id 文章详情'''
     qs = models.Article.objects.get(id=int(article_id))
-    content_info = dict(publish_date=qs.create_at, author=qs.user_id, title=qs.article_title, content=qs.article_content,
+    content_info = dict(publish_date=qs.create_at, author=qs.user_id, title=qs.title, content=qs.content,
                         like_count=qs.like_count, reply_count=qs.reply_count, article_id=qs.id)  # 文章的详情
     comments = searchComment(request, article_id) # 查询文章的评论用户名，评论内容，评论时间  list
     print(comments)
@@ -114,19 +124,21 @@ def artileDetail(request, article_id):
 
 
 # /addLike
-# def addLike(request, article_id):
-#     logger.info('addLike()----<><><>')
-#     qs = models.Article.objects.get(id=int(article_id))
-#     qs.like_count = qs.like_count + 1
-#     print(article_id)
-#     input('----------------')
-#     qs.save()
-#     return JsonResponse({'message': 'success'})
+def addLike(request):
+    logger.info('addLike()')
+    article_id = request.POST.get('article_id')
+    print('*'*10, article_id)
+    qs = models.Article.objects.get(id=int(article_id))
+    qs.like_count = qs.like_count + 1
+
+    qs.save()
+    return JsonResponse({'message': 'success'})
 
 
 # /addComment
 def addComment(request):
     '''评论'''
+    logger.info('addComment()')
     article_id = request.POST.get('article_id')
     # 查询  comment表中的外键
     c1 = models.Comment(create_at=lambda :datetime.datetime.fromtimestamp(time.time()),
@@ -150,4 +162,14 @@ def searchComment(request, article_id):
         temp.append(dict(created_at=comment.create_at, reply_name=comment.reply_username, reply_cont=comment.reply_content))
     return dict(detail=temp)
 
+
+# /register
+def register(request):
+    name = request.POST.get('username')
+    password = request.POST.get('username')
+    confirm_password = request.POST.get('username')
+    error_msg = dict(code=0, msg='')
+    if not all([name, password, confirm_password]):
+        error_msg['msg'] = '请输入用户名或密码'
+        return error_msg
 

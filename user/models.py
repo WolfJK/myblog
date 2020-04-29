@@ -17,16 +17,35 @@ from utils.db import CommonModels
 #         db_table = 'user'
 
 
+class MyUser(AbstractUser):
+    username = models.CharField(max_length=20, verbose_name='用户名',
+                                unique=True,
+                                help_text='Required. 50 characters or fewer. Letters, digits and @/./+/-/_ only.',
+                                error_messages={
+                                    'unique': "A user with that username already exists.",
+                                },
+                                )
+    # password = models.CharField(max_length=120, verbose_name='密码')
+    email = models.EmailField(max_length=120, verbose_name='邮箱')
+    mobile = models.CharField(max_length=11, verbose_name='手机', default='')
+
+    class Meta:
+        db_table = 'user'
+        verbose_name = '用户信息'
+        verbose_name_plural = verbose_name
+
+
 class Article(CommonModels):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='文章发表用户名', on_delete='models.CASCADE')
-    article_title = models.CharField(max_length=120, help_text='文章的标题', verbose_name='文章的标题')
-    article_content = models.TextField(help_text='文章的正文', verbose_name='文章的正文')
+    title = models.CharField(max_length=120, help_text='文章的标题', verbose_name='文章的标题')
+    content = models.TextField(help_text='文章的正文', verbose_name='文章的正文')
     reply_count = models.IntegerField(default=0, help_text='评论数', verbose_name='评论数')
     like_count = models.IntegerField(default=0, help_text='点赞数', verbose_name='点赞数')
 
     class Meta:
         verbose_name = 'article'
         db_table = 'article'
+        indexes = [models.Index(fields=['user', 'title']), ]
 
 
 class Comment(CommonModels):
@@ -37,3 +56,4 @@ class Comment(CommonModels):
     class Meta:
         verbose_name = 'comment'
         db_table = 'comment'
+        indexes = [models.Index(fields=['article', ])]

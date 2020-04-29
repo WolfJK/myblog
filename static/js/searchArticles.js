@@ -40,7 +40,7 @@ var ARTICLES = {
                 $('.r_con').empty();
                 $('.pagelist').empty();
                 $('.r_con').append(response.data);
-                $('.pagelist').append(response.page_data)
+                $('.pagelist').append(response.page_data);
                 console.log('success')
             },
             error:function (response) {

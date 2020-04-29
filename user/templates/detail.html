@@ -61,16 +61,19 @@
         </div>
     </div>
     <div class="share">
-      <p class="diggit" onclick="makeRequest(this)">
-          <a href="##"> 很赞哦！ </a>
-{#          <a href="JavaScript:makeRequest('/addLike?article_id={{ data.content_info.article_id }}','GET');"> 很赞哦！ </a>#}
+      <p class="diggit" >
+
+          <a href="javascript:;" id="addLikes" > 很赞哦！ </a>
       </p>
         <div class="comment">
             <form name="myform" method="post" action="javascript:">
                 {% csrf_token %}
               留言:<br>
-              <textarea id="cont" rows="5" required wrap="hard" placeholder="请输入留言内容" name="message" style="width:1500px;height:100px;resize:none;"></textarea>
-                <input style="float: right;background-color: blue;color:white;border: None" type="button" value="提交评论" onclick="comment(this)">
+
+              <textarea id="cont" rows="5" required wrap="hard" placeholder="请输入留言内容" name="message"
+                        style="width:1500px;height:100px;resize:none;"></textarea>
+                <input style="float: right;background-color: blue;color:white;border: None" type="button"
+                       value="提交评论" onclick="comment(this)">
             </form>
         </div>
         <div class="commentArea">
@@ -92,7 +95,28 @@
 <footer>
   <p>Design by <a href="http://www.yangqq.com" target="_blank">杨青个人博客</a> <a href="/">蜀ICP备11002373号-1</a></p>
 </footer>
-
+<script type="text/javascript">
+    $('#addLikes').on('click', function () {
+         var arid = $('.news_title').attr('arid');
+    console.log('arid');
+    var token = Cookies.get('csrftoken');
+        // var token = $("#searchform").val();
+        var heade = {"X-CSRFTOKEN": token};
+    $.ajax({
+        url: '/addLike',
+        method:'POST',
+        dataType: 'json',
+        headers: heade,
+        data:{'article_id': arid},
+        success:function (response) {
+            location.reload()
+        },
+        error:function () {
+            console.log('点赞失败')
+        }
+    });
+    })
+</script>
 </body>
 
 

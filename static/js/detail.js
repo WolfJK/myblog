@@ -63,10 +63,46 @@ function searchComment() {
     })
 }
 
-function makeRequest(){
-    var arid = $('.news_title').attr('arid');
-    $.get('/addLike?article_id=' + arid, function (data, status) {
-        alert(111)
+// $('#addLikes').on('click', function(event){
+//     alert(2222)
+//     event.preventDefault();  // 使a 标签自带的方法失效
+//     var arid = $('.news_title').attr('arid');
+//     console.log('arid');
+//     alert(arid)
+//     $.ajax({
+//         url: '/addLike',
+//         method:'POST',
+//         dataType: 'json',
+//         data:{'article_id': arid},
+//         success:function (response) {
+//             window.onload()
+//         },
+//         error:function () {
+//             console.log('点赞失败')
+//         }
+//     });
+
+// })
+
+$('.diggit').onclick = function () {
+    alert(12)
+}
+
+
+function addLike() {
+
+    $.ajax({
+        url:'/searchComment?',
+        type:'GET',
+        dataType:'json',
+        data:{'reply_name':name, 'reply_content': content},
+        async: true,
+        success:function (response) {
+            $('#cont').innerText = '';
+            searchComment();
+        },
+        error:function (response) {
+            console.log('请求失败')
+        }
     })
-    makeRequest('/addLike?article_id={{ data.content_info.article_id }}','GET');
 }

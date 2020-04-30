@@ -45,6 +45,35 @@ function comment() {
     })
 }
 
+function js_alert(){
+
+//弹出窗口的地址
+
+var url="./static/0000";
+
+//经过设置后的弹出窗口
+    <!--
+    window.open(url, "newwindow" , "height=100, width=400, top=0, left=0, toolbar=no, menubar=no, scrollbars=no, resizable=no,location=no, status=no")&nbsp;
+        -->
+
+// var name="";
+//
+// var iWidth=500;
+//
+// var iHeight=500;
+//
+// var iTop=(window.screen.availHeight-30-iHeight)/2;
+//
+// var iLeft=(window.screen.availWidth-10-iHeight)/2;
+//
+// //跳转
+//
+// window.open(url);
+
+
+}
+
+
 function searchComment() {
 
     $.ajax({

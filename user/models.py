@@ -18,6 +18,10 @@ from utils.db import CommonModels
 
 
 class MyUser(AbstractUser):
+    is_staff_choice = ((0, '职员'),
+                       (1, '非职员'))
+    is_super = ((0, '普通账号'),
+                       (1, '超级管理员'))
     username = models.CharField(max_length=20, verbose_name='用户名',
                                 unique=True,
                                 help_text='Required. 50 characters or fewer. Letters, digits and @/./+/-/_ only.',
@@ -28,6 +32,9 @@ class MyUser(AbstractUser):
     # password = models.CharField(max_length=120, verbose_name='密码')
     email = models.EmailField(max_length=120, verbose_name='邮箱')
     mobile = models.CharField(max_length=11, verbose_name='手机', default='')
+    is_staff = models.IntegerField(choices=is_staff_choice)
+    is_superuser = models.IntegerField(choices=is_super, default=0)
+    is_active = models.IntegerField(default=1)
 
     class Meta:
         db_table = 'user'
@@ -36,7 +43,7 @@ class MyUser(AbstractUser):
 
 
 class Article(CommonModels):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='文章发表用户名', on_delete='models.CASCADE')
+    user = models.ForeignKey(MyUser, verbose_name='文章发表用户名', on_delete=models.CASCADE)
     title = models.CharField(max_length=120, help_text='文章的标题', verbose_name='文章的标题')
     content = models.TextField(help_text='文章的正文', verbose_name='文章的正文')
     reply_count = models.IntegerField(default=0, help_text='评论数', verbose_name='评论数')
@@ -49,11 +56,11 @@ class Article(CommonModels):
 
 
 class Comment(CommonModels):
-    article = models.ForeignKey('Article', help_text='文章的id', verbose_name='文章的id', on_delete='models.CASCADE')
+    article_id = models.ForeignKey(Article, help_text='文章的id', verbose_name='文章的id', on_delete=models.CASCADE)
     reply_username = models.CharField(max_length=64, help_text='评论的用户名', verbose_name='评论的用户名')
     reply_content = models.TextField(help_text='评论内容', verbose_name='评论内容')
 
     class Meta:
         verbose_name = 'comment'
         db_table = 'comment'
-        indexes = [models.Index(fields=['article', ])]
+        indexes = [models.Index(fields=['article_id', ])]

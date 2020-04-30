@@ -19,7 +19,7 @@
 </head>
 <body>
 <header>
-  <div class="logo"><a href="/"><img src="/static/images/logo.png"></a></div>
+  <div class="logo"><a href="/"><img src="/static/images/logo.jpg"></a></div>
   <nav id="nav">
     <ul>
       <li><a href="index.html">网站首页</a></li>
@@ -52,7 +52,7 @@
           <li class="timer">时间：{{ data.content_info.publish_date }}</li>
           <li class="view">{{ data.content_info.like_count }}人觉得很赞</li>
           <li class="view">{{ data.content_info.reply_count }}人已评论</li>
-        </ul>
+        </ul><div onclick="js_alert(this)">弹窗登录</div>
       </div>
       <div class="news_con"> 也许你能从此文中，找到我们曾经相似的地方。如果你已经工作，有自己的博客，我想，你并没有忘记当初建立个人博客的初衷吧！<br>
         <br>
@@ -96,6 +96,20 @@
   <p>Design by <a href="http://www.yangqq.com" target="_blank">杨青个人博客</a> <a href="/">蜀ICP备11002373号-1</a></p>
 </footer>
 <script type="text/javascript">
+
+    function js_alert(){
+
+//弹出窗口的地址
+
+var url="./static/0000";
+
+//经过设置后的弹出窗口
+    <!--
+    window.open(url, "newwindow" , "height=100, width=400, top=0, left=0, toolbar=no, menubar=no, scrollbars=no, resizable=no,location=no, status=no")&nbsp;
+        -->
+    }
+
+
     $('#addLikes').on('click', function () {
          var arid = $('.news_title').attr('arid');
     console.log('arid');

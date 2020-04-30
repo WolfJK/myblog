@@ -20,11 +20,11 @@ def migrate():
 
 def insertData():
     # 初始化数据库
-    u = models.User(username='管理员', password='aaaa1111', is_active=1,
+    u = models.MyUser(username='管理员', password='aaaa1111', is_active=1,
                     is_staff=1, is_superuser=1, email='abc@qq.com', first_name='a',
-                last_name='b', date_joined=datetime.datetime.now())
+                last_name='b', date_joined=datetime.datetime.now(), mobile='18221278748')
     u.save()
-    a = models.Article(user=u, article_title='title', article_content='content', reply_count=10, like_count=21)
+    a = models.Article(user=u, title='title', content='content', reply_count=10, like_count=21)
     a.save()
 
 
@@ -38,5 +38,5 @@ def select():
 if __name__ == '__main__':
     print(pwd)
     # migrate()
-    # insertData()
+    insertData()
     select()

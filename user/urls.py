@@ -16,5 +16,6 @@ urlpatterns = [
     url(r'^addLike$', views.addLike, name='addLike'),
     # url(r'^addLike\?(?P<article_id>article_id=\d+)$', views.addLike, name='addLike'),
     # url(r'searchLike', views.searchLike, name='searchLike'),
+    url(r'^register$', views.register, name='register'),
     url(r'^$', views.index, name='index'),
 ]

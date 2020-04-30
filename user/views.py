@@ -1,11 +1,11 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.generic import View
-from user import models
+from user import models as model
 from django.core.paginator import Paginator
 from django.conf import settings
 import time, datetime
-from django.contrib.auth import *
+from django.contrib.auth import authenticate
 # Create your views here.
 import os
 import logging
@@ -44,8 +44,8 @@ def page_def(obj, page=1):
     st = ''
     p_range = list(paginator.page_range)
     page_index = p_range.index(page)
-    a = p_range[:5] if p_range.index(page) < 0 else p_range[page-2:page+2] # 最多显示 5 个按钮
-    b = p_range[-1] if p_range.index(page)+2 < p_range[-1] else page_index+2# 最多显示 5 个按钮
+    a = p_range[:5] if p_range.index(page) < 0 else p_range[page-2:page+2]  # 最多显示 5 个按钮
+    b = p_range[-1] if p_range.index(page)+2 < p_range[-1] else page_index+2 # 最多显示 5 个按钮
     pages = p_range[:5]
     if len(p_range) > 5:
         if page < p_range[2]:
@@ -69,8 +69,8 @@ def page_def(obj, page=1):
 def index(request):
     '''首页'''
     logger.info('/index()--><--')
-    print('--><--', settings.STATICFILES_DIRS, settings.BASE_DIR)
-    result = models.Article.objects.all().order_by('-create_at')
+    print('*'*10, dir(model))
+    result = model.Article.objects.all().order_by('-create_at')
     curr_data, page_data = page_def(result)
     recommend_data = ''
     return render(request, 'base.html', {'querys': curr_data})
@@ -83,7 +83,7 @@ def searchArticles(request, page=1):
     page = int(request.POST.get('page'))
     keywords = request.POST.get('keyboard')
 
-    result = models.Article.objects.filter(title__contains=keywords).order_by('-create_at')
+    result = model.Article.objects.filter(title__contains=keywords).order_by('-create_at')
     print(keywords, len((result)), page)
 
     curr_data, page_data = page_def(result, page)
@@ -103,7 +103,7 @@ def searchArticles(request, page=1):
 def searchRecommend(request):
     '''站长推荐'''
     logger.info('/searchRecommend()')
-    queryset = models.Article.objects.all().order_by('-reply_count')[:5]
+    queryset = model.Article.objects.all().order_by('-reply_count')[:5]
     temp = ''
     for i in queryset:
         temp += '<li><a href="/artileDetail/{article_id}">{title}</a></li>'.format(title=i.title, article_id=i.id)
@@ -114,7 +114,7 @@ def searchRecommend(request):
 # /article_detail
 def artileDetail(request, article_id):
     '''article_id: 文章 id 文章详情'''
-    qs = models.Article.objects.get(id=int(article_id))
+    qs = model.Article.objects.get(id=int(article_id))
     content_info = dict(publish_date=qs.create_at, author=qs.user_id, title=qs.title, content=qs.content,
                         like_count=qs.like_count, reply_count=qs.reply_count, article_id=qs.id)  # 文章的详情
     comments = searchComment(request, article_id) # 查询文章的评论用户名，评论内容，评论时间  list
@@ -128,7 +128,7 @@ def addLike(request):
     logger.info('addLike()')
     article_id = request.POST.get('article_id')
     print('*'*10, article_id)
-    qs = models.Article.objects.get(id=int(article_id))
+    qs = model.Article.objects.get(id=int(article_id))
     qs.like_count = qs.like_count + 1
 
     qs.save()
@@ -138,15 +138,17 @@ def addLike(request):
 # /addComment
 def addComment(request):
     '''评论'''
+    # 1. 外键数据插入是通过 表实例还是 字段名
     logger.info('addComment()')
     article_id = request.POST.get('article_id')
+    a = model.Article.objects.get(id=article_id)
     # 查询  comment表中的外键
-    c1 = models.Comment(create_at=lambda :datetime.datetime.fromtimestamp(time.time()),
+    c1 = model.Comment(create_at=lambda :datetime.datetime.fromtimestamp(time.time()),
                    reply_username=request.POST.get('reply_name'),
                    reply_content=request.POST.get('reply_content'),
-                   article_id=request.POST.get('article_id'))
+                   article_id=a)
     c1.save()
-    arti1 = models.Article.objects.get(id=article_id)  # 回复数 + 1
+    arti1 = model.Article.objects.get(id=article_id)  # 回复数 + 1
     arti1.reply_count = arti1.reply_count + 1
     arti1.save()
     return JsonResponse({'message': 'success'})
@@ -156,7 +158,7 @@ def addComment(request):
 def searchComment(request, article_id):
     '''查询文章的所有评论'''
     logger.info('searchComment()')
-    qs = models.Comment.objects.filter(article_id=int(article_id), ).order_by('-create_at')
+    qs = model.Comment.objects.filter(article_id=int(article_id), ).order_by('-create_at')
     temp = list()
     for comment in qs:
         temp.append(dict(created_at=comment.create_at, reply_name=comment.reply_username, reply_cont=comment.reply_content))
@@ -165,11 +167,28 @@ def searchComment(request, article_id):
 
 # /register
 def register(request):
+    logger.info('**register()')
     name = request.POST.get('username')
     password = request.POST.get('username')
     confirm_password = request.POST.get('username')
+    email = request.POST.get('email')
     error_msg = dict(code=0, msg='')
     if not all([name, password, confirm_password]):
         error_msg['msg'] = '请输入用户名或密码'
         return error_msg
 
+    if password.strip() != confirm_password.strip():
+        error_msg['msg'] = '密码和确认密码不一致'
+        return error_msg
+
+    if not email:
+        return error_msg
+
+    user = model.MyUser.objects.create_user(username=name, password=password, email=email)
+    user.save()
+
+
+
+# /login
+def login(request):
+    pass

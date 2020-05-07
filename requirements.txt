@@ -1,0 +1,8 @@
+Django==2.0
+
+PyMySQL==0.9.3
+
+pywin32==227
+
+redis==3.4.1
+

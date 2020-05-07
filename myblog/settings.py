@@ -25,6 +25,8 @@ SECRET_KEY = 'sy3h%yw*4%+oo46u0l%e2wd7f63#town+$!m=ci#r7ru)^9m8-'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# LOGIN_URL = 'http://localhost:8080'
+
 ALLOWED_HOSTS = []
 LOGGING_LEVEL = 'DEBUG'
 

@@ -1,14 +1,16 @@
+# encoding =utf8
 from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.views.generic import View
 from user import models as model
 from django.core.paginator import Paginator
 from django.conf import settings
 import time, datetime
-from django.contrib.auth import authenticate
+from django.contrib import auth
 # Create your views here.
-import os
+import os, re
 import logging
+from django.contrib.auth.decorators import login_required
 
 
 # file = open('./remain/%s' % 'log001.txt', encoding='utf-8', mode='a')
@@ -35,7 +37,7 @@ class IndexView(View):
 def page_def(obj, page=1):
     '''分页'''
     logger.info('page_def()')
-    PAGE_NUM = 3  # 每页显示 5 条数据
+    PAGE_NUM = 5  # 每页显示 5 条数据
     paginator = Paginator(obj, PAGE_NUM)
     if page > paginator.num_pages:
         page = paginator.num_pages
@@ -56,7 +58,11 @@ def page_def(obj, page=1):
             pages = p_range[page-2:page+2]
     print(pages, page, '----', a, b, 's==============')
     for p in pages:
-        st = st + '<a href="javascript:" class="pageginator page-item" page="{p}">第{p}页</a>'.format(p=p)
+        cu_pa = '<a href="javascript:" class="pageginator page-item" style="color:blue;" page="{p}">第{p}页</a>'.format(p=p)
+        if p == page:
+            st = st + cu_pa
+        else:
+            st = st + '<a href="javascript:" class="pageginator page-item" page="{p}">第{p}页</a>'.format(p=p)
     if page > pages[0]:
         st = '<a href="javascript:" class="pageginator" page="{p}">上一页</a>'.format(p=page-1) + st
     if page < pages[-1]:
@@ -68,12 +74,13 @@ def page_def(obj, page=1):
 # /index
 def index(request):
     '''首页'''
-    logger.info('/index()--><--')
+    logger.info('/index()')
     print('*'*10, dir(model))
     result = model.Article.objects.all().order_by('-create_at')
     curr_data, page_data = page_def(result)
     recommend_data = ''
-    return render(request, 'base.html', {'querys': curr_data})
+    name = request.user.username
+    return render(request, 'base.html', {'querys': curr_data, 'name': name})
 
 
 # /searchArticles
@@ -89,13 +96,16 @@ def searchArticles(request, page=1):
     curr_data, page_data = page_def(result, page)
     data = ''
     for curr in curr_data:
-        h = '''<li> <h3 id="a_title"><a href="/artileDetail/{article_id}">{article_title}</a></h3><p id="a_content">{article_content}</p><i></i></li>'''\
+        h = '''<li> <h3 id="a_title"><a href="/artileDetail/{article_id}">{article_title}</a></h3><div id="a_content" style="overflow:hidden;max-height:100px;">{article_content}</div><i></i></li>'''\
             .format(article_title=curr.title,
                     article_content=curr.content,
                     article_id=curr.id
                     )
+        logger.info(h)
         data = data + h
-    return JsonResponse({'data':data, 'page_data': page_data})
+    name = request.user.username
+
+    return JsonResponse({'data':data, 'page_data': page_data, 'name': name})
     # return render(request, 'base.html', {'querys': curr_data, 'pagerange':pagerange, 'cu_page': cu_page, 'h': h})
 
 
@@ -115,24 +125,26 @@ def searchRecommend(request):
 def artileDetail(request, article_id):
     '''article_id: 文章 id 文章详情'''
     qs = model.Article.objects.get(id=int(article_id))
-    content_info = dict(publish_date=qs.create_at, author=qs.user_id, title=qs.title, content=qs.content,
+    content_info = dict(publish_date=qs.create_at, author=qs.user, title=qs.title, content=qs.content,
                         like_count=qs.like_count, reply_count=qs.reply_count, article_id=qs.id)  # 文章的详情
     comments = searchComment(request, article_id) # 查询文章的评论用户名，评论内容，评论时间  list
-    print(comments)
     # return JsonResponse(dict(comments=comments, content_info=content_info))
-    return render(request, 'detail.html', {'data':dict(comments=comments, content_info=content_info)})
+    return render(request, 'detail.html', {'data': dict(comments=comments, content_info=content_info)})
 
 
 # /addLike
 def addLike(request):
     logger.info('addLike()')
-    article_id = request.POST.get('article_id')
-    print('*'*10, article_id)
-    qs = model.Article.objects.get(id=int(article_id))
-    qs.like_count = qs.like_count + 1
+    if request.user.is_authenticated:
+        article_id = request.POST.get('article_id')
+        print('*' * 10, article_id)
+        qs = model.Article.objects.get(id=int(article_id))
+        qs.like_count = qs.like_count + 1
 
-    qs.save()
-    return JsonResponse({'message': 'success'})
+        qs.save()
+        return JsonResponse({'code': 200, 'message': 'success'})
+    else:
+        return JsonResponse({'code': 301, 'message': '请先登录'})
 
 
 # /addComment
@@ -140,18 +152,23 @@ def addComment(request):
     '''评论'''
     # 1. 外键数据插入是通过 表实例还是 字段名
     logger.info('addComment()')
-    article_id = request.POST.get('article_id')
-    a = model.Article.objects.get(id=article_id)
-    # 查询  comment表中的外键
-    c1 = model.Comment(create_at=lambda :datetime.datetime.fromtimestamp(time.time()),
-                   reply_username=request.POST.get('reply_name'),
-                   reply_content=request.POST.get('reply_content'),
-                   article_id=a)
-    c1.save()
-    arti1 = model.Article.objects.get(id=article_id)  # 回复数 + 1
-    arti1.reply_count = arti1.reply_count + 1
-    arti1.save()
-    return JsonResponse({'message': 'success'})
+    if request.user.is_authenticated:
+        logger.info(request.user.username)
+        article_id = request.POST.get('article_id')
+        a = model.Article.objects.get(id=article_id)
+        # 查询  comment表中的外键
+        c1 = model.Comment(create_at=lambda :datetime.datetime.fromtimestamp(time.time()),
+                       reply_username=request.user.username,
+                       reply_content=request.POST.get('reply_content'),
+                       article_id=a)
+        c1.save()
+        arti1 = model.Article.objects.get(id=article_id)  # 回复数 + 1
+        arti1.reply_count = arti1.reply_count + 1
+        arti1.save()
+        logger.info('评论成功')
+        return JsonResponse({'code': 200, 'message': 'success'})
+    else:
+        return JsonResponse({'code': 301, 'message': '请先登录'})
 
 
 # /searchComment
@@ -166,29 +183,112 @@ def searchComment(request, article_id):
 
 
 # /register
-def register(request):
-    logger.info('**register()')
-    name = request.POST.get('username')
-    password = request.POST.get('username')
-    confirm_password = request.POST.get('username')
-    email = request.POST.get('email')
-    error_msg = dict(code=0, msg='')
-    if not all([name, password, confirm_password]):
-        error_msg['msg'] = '请输入用户名或密码'
-        return error_msg
+# def register(request):
+#     logger.info('**register()')
+#     name = request.POST.get('username')
+#     password = request.POST.get('username')
+#     confirm_password = request.POST.get('username')
+#     email = request.POST.get('email')
+#     error_msg = dict(code=0, msg='')
+#     if not all([name, password, confirm_password]):
+#         error_msg['msg'] = '请输入用户名或密码'
+#         return error_msg
+#
+#     if password.strip() != confirm_password.strip():
+#         error_msg['msg'] = '密码和确认密码不一致'
+#         return error_msg
+#
+#     if not email:
+#         return error_msg
+#
+#     user = model.MyUser.objects.create_user(username=name, password=password, email=email)
+#     user.save()
+#
 
-    if password.strip() != confirm_password.strip():
-        error_msg['msg'] = '密码和确认密码不一致'
-        return error_msg
 
-    if not email:
-        return error_msg
 
-    user = model.MyUser.objects.create_user(username=name, password=password, email=email)
-    user.save()
+class RegisterView(View):
+    def get(self, request):
 
+        return render(request, 'user/register.html', context=None)
+
+
+    def post(self, request):
+        logger.info(dir(request))
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm')
+        email = request.POST.get('email')
+        tel = request.POST.get('tel')
+        error_msg = dict(code=0, msg='注册成功')
+        gender = request.POST.get('gender')
+        print('*'*10)
+        print(username, password, email, tel, confirm_password, gender)
+        if not all([username, password, confirm_password]):
+            error_msg['msg'] = '请输入用户名或密码'
+            error_msg['code'] = 1
+            return JsonResponse(error_msg)
+
+        if password.strip() != confirm_password.strip():
+            error_msg['msg'] = '密码和确认密码不一致'
+            error_msg['code'] = 1
+            return JsonResponse(error_msg)
+
+        # if not re.search('^[1][3-8][0-9]{9}$', tel):
+        #     error_msg['msg'] = '手机号不符合规则'
+        #     error_msg['code'] = 1
+        #     return JsonResponse(error_msg)
+
+        if not email:
+            error_msg['msg'] = '请填写邮箱'
+            error_msg['code'] = 1
+            return JsonResponse(error_msg)
+            # return render(request, 'user/register.html', {'data': error_msg})
+        logger.info(error_msg)
+        if model.MyUser.objects.filter(username=username):
+            error_msg['msg'] = '用户已存在'
+            error_msg['code'] = 1
+            return JsonResponse(error_msg)
+        user = model.MyUser.objects.create_user(username=username, password=password, email=email, mobile=tel, )
+        user.save()
+        return JsonResponse(error_msg)
+        # return HttpResponseRedirect('/login')
+        # return render(request, 'user/login.html', {'data': error_msg})
 
 
 # /login
-def login(request):
-    pass
+class LoginView(View):
+    def get(self, request):
+
+        return render(request, 'user/login.html', context=None)
+
+
+    def post(self, request):
+        logger.info('LoginView.post()')
+        user = request.POST.get('username', '')
+        pwd = request.POST.get('password', '')
+
+        us = auth.authenticate(request, username=user, password=pwd)
+        msg = {'code': 0, 'msg': '登录成功'}
+        print('='*10, user, pwd, us)
+        if not all([user, pwd]):
+            msg['code'] = 1
+            msg['msg'] = '请输入用户名或密码'
+            return JsonResponse(msg)
+        if us and us.is_active:
+            logger.info(msg)
+            auth.login(request, us)
+            msg['name'] = request.user.username
+            return JsonResponse(msg)
+        else:
+            msg['code'] = 1
+            msg['msg'] = '用户名或密码错误'
+            return JsonResponse(msg)
+
+
+# /logout
+def logout(request):
+    logger.info('logout')
+    auth.logout(request)
+    msg = {'code': 0, 'msg': '登出成功'}
+    return HttpResponseRedirect('/index')

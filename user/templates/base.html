@@ -1,51 +1,13 @@
-<!doctype html>
+{% extends 'common.html' %}
 {% load staticfiles %}
-<html>
-<head>
-<meta charset="utf-8">
-    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
-<title>首页_个人博客 - 修罗</title>
-<meta name="keywords" content="修罗个人博客" />
-<meta name="description" content="个人原创网站" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="{% static 'css/base.css' %}" rel="stylesheet">
-<link href="{% static 'css/index.css' %}" rel="stylesheet">
-<link href="{% static 'css/m.css' %}" rel="stylesheet">
 
-<script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/searchArticles.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/js-cookie.js' %}"></script>
+{% block js_input %}
+    <script type="text/javascript" src="{% static 'js/searchArticles.js' %}"></script>
+{% endblock js_input %}
 
 
-</head>
-<body>
-<header>
-  <div class="logo"><a href="/"><img src="/static/images/logo.jpg"></a></div>
-  <nav id="nav">
-    <ul>
-      <li><a href="index.html">网站首页</a></li>
-      <li><a href="share.html">我的相册</a></li>
-      <li><a href="list.html">我的日记</a></li>
-      <li><a href="about.html">关于我</a></li>
-      <li><a href="gbook.html">留言</a></li>
-      <li><a href="info.html">内容页</a></li>
-      <li><a href="infopic.html">内容页</a></li>
-    </ul>
-  </nav>
-
-</header>
-<div class="mnav">
-    <ul>
-      <li><a href="index.html">首页</a></li>
-      <li><a href="share.html">相册</a></li>
-      <li><a href="list.html">日记</a></li>
-      <li><a href="about.html">关于</a></li>
-      <li><a href="gbook.html">留言</a></li>
-      <li><a href="info.html">内容页</a></li>
-      <li><a href="infopic.html">内容页</a></li>
-    </ul>
-  </div>
-<article>
+{% block index_content %}
+    <article>
   <div class="l_box">
     <div class="about_me">
       <h2>关于我</h2>
@@ -73,30 +35,15 @@
     <div class="links">
       <h2>友情链接</h2>
       <ul>
-        <a href="http://www.yangqq.com">修罗个人博客</a> <a href="http://www.yangqq.com">修罗博客</a>
+        <a href="/">修罗个人博客</a> <a href="http://www.github.com/WolfJK">修罗Git</a>
       </ul>
     </div>
 
   </div>
       <div class="r_box">
-{#    <li>#}
-{#        {% for r in querys %}#}
-{#            <h3 id="a_title"><a href="/">{{ r.article_title }}</a></h3>#}
-{#            <p id="a_content">{{ r.article_content }}</p>#}
-{#            <i><a href="/"><img src="{% static 'images/1.jpg' %}"></a></i>#}
-{#            {% empty %}#}
-{#            <p>暂无数据</p>#}
-{#        {% endfor %}#}
-{#    </li>#}
+
       <div class="r_con"></div>
     <div class="pagelist"></div>
 </div>
     </article>
-<footer>
-  <p>Design by <a href="http://www.yangqq.com" target="_blank">修罗个人博客</a> <a href="/">蜀ICP备11001372号-1</a></p>
-</footer>
-
-</body>
-
-
-</html>
+{% endblock index_content %}

@@ -1,5 +1,6 @@
 from django.urls import path, include
 from user import views
+from user.views import RegisterView, LoginView
 from django.conf.urls import url
 
 app_name = 'user'
@@ -16,6 +17,8 @@ urlpatterns = [
     url(r'^addLike$', views.addLike, name='addLike'),
     # url(r'^addLike\?(?P<article_id>article_id=\d+)$', views.addLike, name='addLike'),
     # url(r'searchLike', views.searchLike, name='searchLike'),
-    url(r'^register$', views.register, name='register'),
+    url(r'^register$', RegisterView.as_view(), name='register'),
+    url(r'^login$', LoginView.as_view(), name='login'),
+    url(r'^logout$', views.logout, name='logout'),
     url(r'^$', views.index, name='index'),
 ]

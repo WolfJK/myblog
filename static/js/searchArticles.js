@@ -22,7 +22,7 @@ var ARTICLES = {
         page: 1
     },
     searchArticles: function(page){
-        _data = {'page':page, 'keyboard':$('#keyboard').val()}
+        _data = {'page':page, 'keyboard':$('#keyboard').val()};
 
         var token = Cookies.get('csrftoken');
         // var token = $("#searchform").val();
@@ -41,6 +41,11 @@ var ARTICLES = {
                 $('.pagelist').empty();
                 $('.r_con').append(response.data);
                 $('.pagelist').append(response.page_data);
+                // if(response.name){
+                //     $('#info').text('当前用户: ' + response.name);
+                // }
+
+                // alert(response.name);
                 console.log('success')
             },
             error:function (response) {

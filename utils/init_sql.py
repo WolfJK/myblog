@@ -24,7 +24,11 @@ def insertData():
                     is_staff=1, is_superuser=1, email='abc@qq.com', first_name='a',
                 last_name='b', date_joined=datetime.datetime.now(), mobile='18221278748')
     u.save()
-    a = models.Article(user=u, title='title', content='content', reply_count=10, like_count=21)
+    a = models.Article(user=u, title='自定义 Django 中的认证机制',
+                       content='''指定身份认证后端 :
+                       在幕后，Django 维护着一个 “身份认证后端” 列表，用于检查身份认证,
+在 AUTHENTICATION_BACKENDS setting 中指定要使用的身份验证后端列表。''',
+                       reply_count=10, like_count=21)
     a.save()
 
 

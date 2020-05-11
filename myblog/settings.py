@@ -23,11 +23,11 @@ AUTH_USER_MODEL = 'user.MyUser'
 SECRET_KEY = 'sy3h%yw*4%+oo46u0l%e2wd7f63#town+$!m=ci#r7ru)^9m8-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # LOGIN_URL = 'http://localhost:8080'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 LOGGING_LEVEL = 'DEBUG'
 
 # Application definition
@@ -132,7 +132,11 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
+
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+print('*', STATICFILES_DIRS)
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # STATICFILES_DIRS = [os.path.join(STATIC_ROOT, 'images'), os.path.join(STATIC_ROOT, 'css'), os.path.join(STATIC_ROOT, r'js')]
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
